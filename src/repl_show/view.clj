@@ -90,10 +90,15 @@
           (full-line view-size-x (str (margin default-left-margin-size) %))) 
        (clojure.string/split (glow/highlight code-block) #"\n")))
 
+(defn format-line 
+  ([line]
+   (format-line line (first view-size)))
+  ([line view-size-x]
+   (full-line view-size-x (get-line line view-size-x))))
+
 (defn format-text [text-block]
-  (let [[view-size-x view-size-y] view-size]
-    (map #(let [line %]  
-            (full-line view-size-x (get-line line view-size-x))) 
+  (let [view-size-x (first view-size)]
+    (map #(format-line % view-size-x) 
          (clojure.string/split text-block #"\n"))))
 
 (defn take-num-breaks [n-limit texts-and-codes]
@@ -108,9 +113,18 @@
                num-visited-breaks) 
              (conj res h)))))
 
+(defn slide-height [texts-and-codes]
+  (reduce (fn [sum [label content]] 
+            (+ sum
+              (inc (if (and content (not (empty? content))) 
+                     (count (re-seq #"\n" content)) 0)))) 
+          0 
+          texts-and-codes)
+  )
 
 (defn merge-texts-and-codes [texts-and-codes break-limit]
   (let [t-c (take-num-breaks break-limit texts-and-codes)
+        slide-height (slide-height texts-and-codes)
         slide-as-list (filter #(not (empty? %))
                                  (mapcat (fn [[k v]]
                                                 (case k 
@@ -120,13 +134,13 @@
                                       t-c))
         [view-size-x view-size-y] view-size
 
-        remaining-lines (- view-size-y (count slide-as-list))
+        remaining-lines (- view-size-y slide-height)
         n-lines-before (quot remaining-lines 2)
-        n-lines-after (- remaining-lines n-lines-before 1)
+        n-lines-after (dec (- view-size-y (count slide-as-list) n-lines-before))
         lines-before (repeat n-lines-before (full-line view-size-x ""))
         lines-after (repeat n-lines-after (full-line view-size-x ""))
         ]
-        
+       (prn slide-height n-lines-before n-lines-after) 
     (clojure.string/join "\n" (into ( into ( into [] lines-before) slide-as-list) lines-after))))
 
 (defn get-horizontal-frame []
@@ -141,6 +155,7 @@
     (apply str line "\n" formatted-content)))
 
 
-(defn show-slide [content break-limit]
+(defn show-slide [content slide-footage break-limit]
   (println (format-slide content break-limit))
+  (println (format-line (str ">> " slide-footage)))
   (symbol (get-horizontal-frame)))
