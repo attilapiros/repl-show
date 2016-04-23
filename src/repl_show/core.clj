@@ -116,7 +116,7 @@
   ([] 
    (p 1))
   ([num-steps-to-go] 
-   (p num-steps-to-go (get-current-move-data))) 
+   (p num-steps-to-go (get-current-slide-idx-w-break-limit))) 
   ([num-steps-to-go [slide-index curr-break-limit]]
    (let [next-break (- curr-break-limit num-steps-to-go)
          prev-break-limit (num-breaks (dec slide-index))]
