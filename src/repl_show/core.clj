@@ -4,10 +4,27 @@
             [repl-show.view :refer [show-slide]]
             [clojure.tools.trace :as trace]))
 
+(def help-content ["| \\r Repl-Show Help"
+                   ""
+                   "(n)       : go to next slide/build"   
+                   "(n <num>) : go to next <num> slides/builds"
+                   "(p)       : go back to the previous slide/build"   
+                   "(p <num>) : go back to <num> slides/builds"   
+                   "(re)      : redraw the current slide / exit help"   
+                   "(g <num>) : go to the <num> slide"
+                   "(l)       : go to the last side"
+                   "(f)       : go to the first side"])
+
+(defn add-help-slide [loaded-slides]
+  (into [ {:pres [[(apply str 
+                          (interpose "\n" help-content))]]
+           :num-breaks 0
+           :full-code ""}] loaded-slides))
+
 (def presentation-state 
   (atom {:curr-slide-index 0
          :curr-break-limit 1
-         :slides []}))
+         :slides (add-help-slide [])}))
 
 (def content-file-name "content_orig.txt")
 
@@ -33,34 +50,13 @@
         (if (not (nil? code)) 
           (exec-code-expression-by-expression code))))
 
-(def help-content 
-  [
-   "| \\r Repl-Show Help"
-   ""
-   "(n)       : go to next slide/build"   
-   "(n <num>) : go to next <num> slides/builds"
-   "(p)       : go back to the previous slide/build"   
-   "(p <num>) : go back to <num> slides/builds"   
-   "(re)      : redraw the current slide / exit help"   
-   "(g <num>) : go to the <num> slide"
-   "(l)       : go to the last side"
-   "(f)       : go to the first side"
-   ""])
-
-(defn add-help-slide [loaded-slides]
-  (into [ {:pres [[:text 
-                   (apply str
-                          (interpose "\n" help-content))]]
-           :num-breaks 0
-           :full-code ""}] loaded-slides))
-
 
 (defn get-slide-content [index]
   (let  [{:keys [curr-break-limit slides]} @presentation-state]
-    (if (< index 0) {:pres [[:text "| \\r Use (start)"]]
+    (if (< index 0) {:pres [["| \\r Index lower bound"]]
                      :num-breaks 0
                      :full-code ""}
-      (get slides index {:pres [[:text "| \\r The End!"]]
+      (get slides index {:pres [["| \\r Index upper bound"]]
                          :num-breaks 0
                          :full-code ""}))))
 
@@ -78,9 +74,10 @@
 (defn g 
   ([slide-index] (g slide-index 1))
   ([slide-index curr-break-limit] 
-   (swap! presentation-state #(assoc % 
-                                     :curr-slide-index slide-index
-                                     :curr-break-limit curr-break-limit))
+   (if (and (< 0 slide-index) (<= slide-index (last-side-index)))
+     (swap! presentation-state #(assoc % 
+                                       :curr-slide-index slide-index
+                                       :curr-break-limit curr-break-limit)))
    (re)))
 
 (defn h [] (show-slide (:pres (get-slide-content 0)) "help" 1))
@@ -105,6 +102,7 @@
    (n num-steps-to-go (get-current-slide-idx-w-break-limit))) 
   ([num-steps-to-go [slide-index curr-break-limit]]
    (let [next-break (+ curr-break-limit num-steps-to-go)
+         last-side-index (last-side-index)
          break-limit (num-breaks slide-index)]
      (if (<= next-break (inc break-limit))
        (g slide-index next-break)

@@ -68,7 +68,7 @@
           #">(.*)"  :>> #(vector :right (second %)) 
           #"[|](.*)" :>> #(vector :center (second %)) 
           #"/" :>> (fn [_] ( vector :center (string-with-n-char 
-                                      (- view-size-x (* 2 default-left-margin-size)) \-))) 
+                                              (- view-size-x (* 2 default-left-margin-size)) \-))) 
           #"//" :>> (fn [_] ( vector :center (string-with-n-char 
                                                (- view-size-x 2) \-))) 
           [:default text-with-marker])
@@ -88,7 +88,7 @@
 (defn format-code [code-block]
   (map #(let [[view-size-x _] view-size]
           (full-line view-size-x (str (margin default-left-margin-size) %))) 
-       (clojure.string/split (glow/highlight code-block) #"\n")))
+       (clojure.string/split-lines (glow/highlight code-block))))
 
 (defn format-line 
   ([line]
@@ -97,41 +97,31 @@
    (full-line view-size-x (get-line line view-size-x))))
 
 (defn format-text [text-block]
-  (let [view-size-x (first view-size)]
-    (map #(format-line % view-size-x) 
-         (clojure.string/split text-block #"\n"))))
+  (if  text-block
+    (let [view-size-x (first view-size)]
+      (map #(format-line % view-size-x) 
+           (clojure.string/split-lines text-block)))))
 
-(defn take-num-breaks [n-limit texts-and-codes]
-  (loop [[h & more] texts-and-codes
-         num-visited-breaks 0
-         res []]
-    (if (or (nil? h) (>= num-visited-breaks n-limit)) 
-      res
-      (recur more 
-             (if (= h [:break]) 
-               (inc num-visited-breaks) 
-               num-visited-breaks) 
-             (conj res h)))))
 
 (defn slide-height [texts-and-codes]
-  (reduce (fn [sum [label content]] 
+  (reduce (fn [sum content] 
             (+ sum
-              (inc (if (and content (not (empty? content))) 
-                     (count (re-seq #"\n" content)) 0)))) 
+               (inc (if (and content (not (empty? content))) 
+                      (count (re-seq #"\n" content)) 0)))) 
           0 
-          texts-and-codes)
-  )
+          (flatten texts-and-codes)))
+
+(defn format-build [build]
+  (map-indexed (fn [idx content]
+                 (if (even? idx) 
+                   (format-text content)
+                   (format-code content)))
+               build))
 
 (defn merge-texts-and-codes [texts-and-codes break-limit]
-  (let [t-c (take-num-breaks break-limit texts-and-codes)
+  (let [visible-builds (take break-limit texts-and-codes) 
         slide-height (slide-height texts-and-codes)
-        slide-as-list (filter #(not (empty? %))
-                                 (mapcat (fn [[k v]]
-                                                (case k 
-                                                  :code (format-code v) 
-                                                  :text  (format-text v)
-                                                  :break  [""]))
-                                      t-c))
+        slide-as-list (flatten (map format-build visible-builds))
         [view-size-x view-size-y] view-size
 
         remaining-lines (- view-size-y slide-height)
@@ -140,18 +130,16 @@
         lines-before (repeat n-lines-before (full-line view-size-x ""))
         lines-after (repeat n-lines-after (full-line view-size-x ""))
         ]
-       (prn slide-height n-lines-before n-lines-after) 
     (clojure.string/join "\n" (into ( into ( into [] lines-before) slide-as-list) lines-after))))
 
 (defn get-horizontal-frame []
   (string-with-n-char (first view-size) \*))
 
 (defn format-slide [slide-content-text break-limit]
-  (let [
-        formatted-content  
-                   (merge-texts-and-codes slide-content-text break-limit)
+  (let [formatted-content  
+        (merge-texts-and-codes slide-content-text break-limit)
         line 
-          (get-horizontal-frame)]
+        (get-horizontal-frame)]
     (apply str line "\n" formatted-content)))
 
 
