@@ -1,23 +1,30 @@
 (ns repl-show.core (:gen-class)
   (:require [glow.core :as glow]
             [repl-show.parser :refer [parse-to-slides]]
-            [repl-show.view :refer [show-slide]]
+            [repl-show.view :refer [show-slide view-config]]
             [clojure.tools.trace :as trace]))
 
 (def help-content ["| \\r Repl-Show Help"
                    ""
-                   "(n)       : go to next slide/build"   
-                   "(n <num>) : go to next <num> slides/builds"
-                   "(p)       : go back to the previous slide/build"   
-                   "(p <num>) : go back to <num> slides/builds"   
-                   "(re)      : redraw the current slide / exit help"   
-                   "(g <num>) : go to the <num> slide"
+                   "(n <num>) : go to next <num> slides/builds, <num> is 1 by default"
+                   ""
+                   "(p <num>) : go back to <num> slides/builds, <num> is 1 by default"   
+                   ""
+                   "(re)      : redraw the current slide / exit help"
+                   ""   
+                   "(g <idx>) : go to the <idx> slide"
+                   ""
+                   "(f)       : go to the first side"
                    "(l)       : go to the last side"
-                   "(f)       : go to the first side"])
+                   ""
+                   "(config-view w h s): config view, where "
+                   "| - w is the width of the view          "
+                   "| - h is the height of the view         "
+                   "| - s is optional boolean (show-footage)"
+                   ])
 
 (defn add-help-slide [loaded-slides]
-  (into [ {:pres [[(apply str 
-                          (interpose "\n" help-content))]]
+  (into [ {:pres [[(apply str (interpose "\n" help-content))]]
            :num-breaks 0
            :full-code ""}] loaded-slides))
 
@@ -26,8 +33,7 @@
          :curr-break-limit 1
          :slides (add-help-slide [])}))
 
-(def content-file-name "content_orig.txt")
-
+(def content-file-name "tutorial.txt")
 
 (defn- exec-code-expression-by-expression [code]
   (with-open 
@@ -122,6 +128,14 @@
        (g slide-index next-break)
        (recur (- num-steps-to-go 1 curr-break-limit) 
               [(dec slide-index) prev-break-limit])))))
+
+(defn config-view
+  ([width height] (config-view width height true)) 
+  ([width height show-footage]
+    (reset! view-config {:view-width width 
+                         :view-height height 
+                         :show-footage show-footage})
+    (re)))
 
 (defn start 
   ([] (start content-file-name))

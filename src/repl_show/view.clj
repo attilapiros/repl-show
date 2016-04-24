@@ -4,7 +4,9 @@
 
 (def default-left-margin-size 4)
 
-(def view-size [75 25])
+(def view-config (atom {:view-width 75
+                        :view-height 25
+                        :show-footage true}))
 
 (defn text-length [colored-text]
   (count (clojure.string/replace colored-text 
@@ -52,14 +54,14 @@
             (recur false rest-text (str colored-text curr))))  
         colored-text))))
 
-(defn full-line [view-size-x left-margined-text]
-  (let [right-margin-size (- view-size-x 
+(defn full-line [view-width left-margined-text]
+  (let [right-margin-size (- view-width 
                              1
                              (text-length left-margined-text) 
                              1)]
     (str \* left-margined-text "\u001b[0m" (margin right-margin-size) "*")))
 
-(defn get-line [text-with-marker view-size-x]
+(defn get-line [text-with-marker view-width]
   (let [[alignment text-body]
         (condp re-matches text-with-marker
           #"<<(.*)"  :>> #(vector :flush-left (second %)) 
@@ -68,38 +70,38 @@
           #">(.*)"  :>> #(vector :right (second %)) 
           #"[|](.*)" :>> #(vector :center (second %)) 
           #"/" :>> (fn [_] ( vector :center (string-with-n-char 
-                                              (- view-size-x (* 2 default-left-margin-size)) \-))) 
+                                              (- view-width (* 2 default-left-margin-size)) \-))) 
           #"//" :>> (fn [_] ( vector :center (string-with-n-char 
-                                               (- view-size-x 2) \-))) 
+                                               (- view-width 2) \-))) 
           [:default text-with-marker])
         colored-text (length-and-colored text-body) 
         colored-length (text-length colored-text) 
         left-margin-size (case alignment
                            :left default-left-margin-size
-                           :right (- view-size-x default-left-margin-size 
+                           :right (- view-width default-left-margin-size 
                                      colored-length)
                            :flush-left 1
-                           :flush-right (- view-size-x 3 colored-length)
-                           :center (quot (- view-size-x 2 colored-length) 2) 
+                           :flush-right (- view-width 3 colored-length)
+                           :center (quot (- view-width 2 colored-length) 2) 
                            :default default-left-margin-size)
         left-margined-text (str (margin left-margin-size) colored-text)]  
     left-margined-text))
 
 (defn format-code [code-block]
-  (map #(let [[view-size-x _] view-size]
-          (full-line view-size-x (str (margin default-left-margin-size) %))) 
+  (map #(let [{:keys [view-width]} @view-config]
+          (full-line view-width (str (margin default-left-margin-size) %))) 
        (clojure.string/split-lines (glow/highlight code-block))))
 
 (defn format-line 
   ([line]
-   (format-line line (first view-size)))
-  ([line view-size-x]
-   (full-line view-size-x (get-line line view-size-x))))
+   (format-line line (:view-width @view-config)))
+  ([line view-width]
+   (full-line view-width (get-line line view-width))))
 
 (defn format-text [text-block]
   (if  text-block
-    (let [view-size-x (first view-size)]
-      (map #(format-line % view-size-x) 
+    (let [{:keys  [view-width]} @view-config]
+      (map #(format-line % view-width) 
            (clojure.string/split-lines text-block)))))
 
 
@@ -122,18 +124,20 @@
   (let [visible-builds (take break-limit texts-and-codes) 
         slide-height (slide-height texts-and-codes)
         slide-as-list (flatten (map format-build visible-builds))
-        [view-size-x view-size-y] view-size
+        {:keys [view-width view-height show-footage]} @view-config
 
-        remaining-lines (- view-size-y slide-height)
+        remaining-lines (- view-height slide-height)
         n-lines-before (quot remaining-lines 2)
-        n-lines-after (dec (- view-size-y (count slide-as-list) n-lines-before))
-        lines-before (repeat n-lines-before (full-line view-size-x ""))
-        lines-after (repeat n-lines-after (full-line view-size-x ""))
+        n-lines-after (- 
+                        (- view-height (count slide-as-list) n-lines-before)
+                        (if show-footage 1 0))
+        lines-before (repeat n-lines-before (full-line view-width ""))
+        lines-after (repeat n-lines-after (full-line view-width ""))
         ]
     (clojure.string/join "\n" (into ( into ( into [] lines-before) slide-as-list) lines-after))))
 
 (defn get-horizontal-frame []
-  (string-with-n-char (first view-size) \*))
+  (string-with-n-char (:view-width @view-config) \*))
 
 (defn format-slide [slide-content-text break-limit]
   (let [formatted-content  
@@ -145,5 +149,6 @@
 
 (defn show-slide [content slide-footage break-limit]
   (println (format-slide content break-limit))
-  (println (format-line (str ">> " slide-footage)))
+  (if (:show-footage @view-config)
+    (println (format-line (str ">> " slide-footage))))
   (symbol (get-horizontal-frame)))

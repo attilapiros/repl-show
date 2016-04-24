@@ -1,21 +1,21 @@
-| \gWelcome to REPLesent!
+| \gWelcome to repl-show!
 
-REPLesent is a neat little tool to build presentations
-using the Scala REPL.
+repl-show is a little tool to build presentations
+using the Clojure repl.
 
 It is a good option for training sessions and talks
 with some live coding. More on that later.
 
-To continue, type the letter '\bn\s' (no quotes) and \bRETURN\s.
+To continue, type the letter '\b(n)\s' (no quotes) and \bRETURN\s.
 ---
-You use '\bn\s' to advance to the next slide.
+You use '\b(n)\s' to advance to the next slide.
 
-Let's try it, type '\bn\s' again to see it.
+Let's try it, type '\b(n)\s' again to see it.
 ---
-To go back to a previous slide, you can type '\bp\s'.
+To go back to a previous slide, you can type '\b(p)\s'.
 
-Try '\bp\s' now to return to the prior slide and
-then use '\bn\s' twice to go to the next slide.
+Try '\b(p)\s' now to return to the prior slide and
+then use '\b(n)\s' twice to go to the next slide.
 
 But please be careful to not read and
 follow these instructions again.
@@ -25,19 +25,19 @@ infinite loop between two slides forever.
 ---
 Nice, I am glad you made your way to this slide.
 
-But you know, all that "use '\bn\s' twice" business was a lot of effort.
+But you know, all that "use '\b(n)\s' twice" business was a lot of effort.
 
 There should be a better way to advance two slides at once.
 
 And, as a matter of fact, there is!
 
-You should try '\b2 n\s'. Go ahead, enter '\b2 n\s' and see what happens!
+You should try '\b(n 2)\s'. Go ahead, enter '\b(n 2)\s' and see what happens!
 ---
 Holy cow, that was awesome!
 
 OK, let's try something new again.
 
-This time I want you to enter '\bl\s' (ell).
+This time I want you to enter '\b(l)\s' (ell).
 
 I'm not telling what it does.
 ---
@@ -45,12 +45,12 @@ OK, you have just skipped a slide.
 
 Aren't you curious to know what that slide had to say?
 
-You already know that you could use '\bp\s' to go back,
+You already know that you could use '\b(p)\s' to go back,
 but let's try something different now.
 
 The slide you missed was slide number 5.
 
-To jump to slide 5, just use the command '\b5 go\s'. Go!
+To jump to slide 5, just use the command '\b(g 5)\s'. Go!
 ---
 | \gBasics
 
@@ -133,69 +133,52 @@ Double slashes '\r//\s' create a line across the entire screen:
 
 //
 
-You can also specify custom patterns, as in '\r/=+\s':
-
-/=+
-
-You can use Unicode and ANSI colors, too. Be creative!
-
-/\r=\s\**\s\r=\b=\s\**\s\b=
-
-/ ? ?
-
 ---
 | \gSyntax Highlighting
 
 Basic support for syntax highlighting is also provided.
 
-Just surround your Scala code with the \r```\s delimiter.
+Just surround your Clojure code with the \r```\s delimiter.
 
 < ```
-< val a = 42
+< (dotimes [n 5] (println "n is" n))
 < ```
 
 becomes
 
 ```
-val a = 42
-```
----
-```
-(def a "hello A")
-(print a)
-(def b "hello B")
-(println b)
+(dotimes [n 5] (println "n is" n))
 ```
 ---
 | \gRunning Code
 
 Now, what I personally consider to be the second coolest feature of all:
 
-| \*Running Scala code straight from your slides!
+| \*Running Clojure code straight from your slides!
 
 Let's start with some sample code:
 
 ```
-val a = 2
-val b = 3
-a * b
+(defn fibo []
+  (map first (iterate (fn [[p a]] [a (+ p a)]) [1 1])))
+
+(take 12 (fibo))
 ```
 
-Now, enter '\b!!\s' or '\br\s' and see the Scala REPL execute the code
+Now, enter '\b(run)\s' and see the Clojure repl execute the code
 above as if you had typed it yourself directly in the prompt.
 ---
 That was pretty cool, eh? But it gets better.
 
-Remember we defined vals \ba\s and \bb\s in the previous slide?
+Remember we defined  \bfibo\s in the previous slide?
 
 Any slide can now refer to those variables.
 They are still in scope. Try it if you don't believe me:
 
 ```
-val c = a + b
+(take 15 (fibo))
 ```
 --
-
 You can put multiple pieces of code in the same slide, separated
 by builds or not. They all get executed properly.
 --
@@ -211,31 +194,6 @@ And then use it:
 ```
 for (i <- 1 to last) yield i * i
 ```
----
-Of course, I saved the best for last:
---
-
-| \gEmoji support!
---
-
-I mean,
-
-| \gEmoji support:bangbang:
---
-
-The most commonly used shortcuts are supported: \bemoji-cheat-sheet.com\s
---
-
-And you can even use them as horizontal rulers:
-
-/ :walking:
-
-// :banana:
-
-/ :+1: :-1:
-
-// :two_men_holding_hands: :two_women_holding_hands:
-
 ---
 Oh, noes! This is the last slide.
 
