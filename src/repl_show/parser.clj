@@ -15,12 +15,7 @@
 (defn to-pres-and-full-code [pres]
   {
    :pres pres
-   :num-breaks (dec (count pres))
-   :full-code (clojure.string/join "\n" (flatten (mapcat 
-                (fn [break] 
-                  (keep-indexed 
-                    #(when (odd? %1) %2) 
-                    break)) pres)))})
+   :num-breaks (dec (count pres))})
 
 (defn slides [file-content]
       (->> file-content

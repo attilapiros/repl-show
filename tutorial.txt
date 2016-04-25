@@ -72,7 +72,7 @@ Advance to the next slide to learn more about builds.
 
 Builds are separated by two dashes (\r--\s) on a line by themselves.
 
-Type '\bn\s' a few times to see how it works.
+Type '\b(n)\s' a few times to see how it works.
 --
 
 \*Phase 1\s: Collect underpants
@@ -170,7 +170,7 @@ above as if you had typed it yourself directly in the prompt.
 ---
 That was pretty cool, eh? But it gets better.
 
-Remember we defined  \bfibo\s in the previous slide?
+Remember we defined \bfibo\s in the previous slide?
 
 Any slide can now refer to those variables.
 They are still in scope. Try it if you don't believe me:
@@ -179,30 +179,31 @@ They are still in scope. Try it if you don't believe me:
 (take 15 (fibo))
 ```
 --
+
 You can put multiple pieces of code in the same slide, separated
 by builds or not. They all get executed properly.
 --
-
-Let's try it. First, define a new value:
+Let's try it. First, define a new function:
 
 ```
-val last = a + b + c
+(defn say-hello [name]
+  (println (str "Hello, " name "!")))
 ```
 
 And then use it:
 
 ```
-for (i <- 1 to last) yield i * i
+(say-hello "World")
 ```
 ---
 Oh, noes! This is the last slide.
 
 And here ends our adventure.
 
-But I will leave you with one last command to try: '\bh\s'.
+But I will leave you with one last command to try: '\b(h)\s'.
 
 Good luck with that!
 
-Now go back to slide 7 ('\b7 go\s') to learn
+Now go back to slide 7 '\b(g 7)\s' to learn
 how to create your own presentations!
 

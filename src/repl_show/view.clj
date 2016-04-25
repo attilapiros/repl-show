@@ -4,7 +4,7 @@
 
 (def default-left-margin-size 4)
 
-(def view-config (atom {:view-width 75
+(def view-config (atom {:view-width 79
                         :view-height 25
                         :show-footage true}))
 
@@ -102,14 +102,14 @@
   (if  text-block
     (let [{:keys  [view-width]} @view-config]
       (map #(format-line % view-width) 
-           (clojure.string/split-lines text-block)))))
+           (conj  (clojure.string/split-lines text-block) "")))))
 
 
 (defn slide-height [texts-and-codes]
   (reduce (fn [sum content] 
             (+ sum
-               (inc (if (and content (not (empty? content))) 
-                      (count (re-seq #"\n" content)) 0)))) 
+               (if (and content (not (empty? content))) 
+                      (+ 2 (count (re-seq #"\n" content))) 0))) 
           0 
           (flatten texts-and-codes)))
 
@@ -125,8 +125,8 @@
         slide-height (slide-height texts-and-codes)
         slide-as-list (flatten (map format-build visible-builds))
         {:keys [view-width view-height show-footage]} @view-config
-
-        remaining-lines (- view-height slide-height)
+        view-height (- view-height 3) ; 3 = repl promp and 2 borders
+        remaining-lines (trace/trace "remaining-lines" (- view-height slide-height))
         n-lines-before (quot remaining-lines 2)
         n-lines-after (- 
                         (- view-height (count slide-as-list) n-lines-before)

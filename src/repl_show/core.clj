@@ -6,9 +6,9 @@
 
 (def help-content ["| \\r Repl-Show Help"
                    ""
-                   "(n <num>) : go to next <num> slides/builds, <num> is 1 by default"
+                   "(n <num>) : go to next <num> slides/builds, 1 is the default"
                    ""
-                   "(p <num>) : go back to <num> slides/builds, <num> is 1 by default"   
+                   "(p <num>) : go back to <num> slides/builds, 1 is the default"   
                    ""
                    "(re)      : redraw the current slide / exit help"
                    ""   
@@ -25,8 +25,7 @@
 
 (defn add-help-slide [loaded-slides]
   (into [ {:pres [[(apply str (interpose "\n" help-content))]]
-           :num-breaks 0
-           :full-code ""}] loaded-slides))
+           :num-breaks 0}] loaded-slides))
 
 (def presentation-state 
   (atom {:curr-slide-index 0
@@ -51,20 +50,23 @@
         res))))
 
 (defn run []
-  (let [index (:curr-slide-index @presentation-state)
-        code (get-in @presentation-state [:slides index :full-code])]
-        (if (not (nil? code)) 
-          (exec-code-expression-by-expression code))))
+  (let [{:keys [curr-slide-index curr-break-limit]} @presentation-state
+        break (nth (get-in @presentation-state [:slides curr-slide-index :pres]) (dec curr-break-limit))
+        only-codes-in-break (keep-indexed (fn [idx v] (when (odd? idx) v)) break)
+        code (clojure.string/join "\n" (flatten only-codes-in-break))  
+        ]
+        (if (not (empty? code) ) 
+          (exec-code-expression-by-expression code)
+          (symbol "No code to execute!")
+          )))
 
 
 (defn get-slide-content [index]
   (let  [{:keys [curr-break-limit slides]} @presentation-state]
     (if (< index 0) {:pres [["| \\r Index lower bound"]]
-                     :num-breaks 0
-                     :full-code ""}
+                     :num-breaks 0}
       (get slides index {:pres [["| \\r Index upper bound"]]
-                         :num-breaks 0
-                         :full-code ""}))))
+                         :num-breaks 0}))))
 
 (defn last-side-index []
   (dec (count (:slides @presentation-state))))
@@ -132,9 +134,9 @@
 (defn config-view
   ([width height] (config-view width height true)) 
   ([width height show-footage]
-    (reset! view-config {:view-width width 
+    (println (reset! view-config {:view-width width 
                          :view-height height 
-                         :show-footage show-footage})
+                         :show-footage show-footage}))
     (re)))
 
 (defn start 
