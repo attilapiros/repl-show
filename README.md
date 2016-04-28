@@ -33,6 +33,8 @@ lein repl
 
 - create a text file with your super presentation content, you can create it for example in the project root 
 
+- start a repl
+
 - start the presentation: 
 ```
 (start "path-to-the-presentation-file")
