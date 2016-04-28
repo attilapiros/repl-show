@@ -24,6 +24,12 @@ After the execution with *(run)*:
 ```
 lein repl
 ```
+
+- use the repl-show namespace:
+```
+ (use '[repl-show.core])
+```
+
 - start the tutorial which is 15 easy slides about the markup and navigation: 
 ```
 (start)
@@ -34,6 +40,11 @@ lein repl
 - create a text file with your super presentation content, you can create it for example in the project root 
 
 - start a repl
+
+- use the repl-show namespace:
+```
+ (use '[repl-show.core])
+```
 
 - start the presentation: 
 ```
