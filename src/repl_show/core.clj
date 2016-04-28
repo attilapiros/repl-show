@@ -24,8 +24,7 @@
                    ])
 
 (defn add-help-slide [loaded-slides]
-  (into [ {:pres [[(apply str (interpose "\n" help-content))]]
-           :num-breaks 0}] loaded-slides))
+  (into [[[(apply str (interpose "\n" help-content))]]] loaded-slides))
 
 (def presentation-state 
   (atom {:curr-slide-index 0
@@ -51,7 +50,7 @@
 
 (defn run []
   (let [{:keys [curr-slide-index curr-break-limit]} @presentation-state
-        break (nth (get-in @presentation-state [:slides curr-slide-index :pres]) (dec curr-break-limit))
+        break (nth (get-in @presentation-state [:slides curr-slide-index]) (dec curr-break-limit))
         only-codes-in-break (keep-indexed (fn [idx v] (when (odd? idx) v)) break)
         code (clojure.string/join "\n" (flatten only-codes-in-break))  
         ]
@@ -63,10 +62,8 @@
 
 (defn get-slide-content [index]
   (let  [{:keys [curr-break-limit slides]} @presentation-state]
-    (if (< index 0) {:pres [["| \\r Index lower bound"]]
-                     :num-breaks 0}
-      (get slides index {:pres [["| \\r Index upper bound"]]
-                         :num-breaks 0}))))
+    (if (< index 0) [["| \\r Index lower bound"]]
+      (get slides index [["| \\r Index upper bound"]]))))
 
 (defn last-side-index []
   (dec (count (:slides @presentation-state))))
@@ -75,7 +72,7 @@
   (let [{:keys [curr-slide-index slides curr-break-limit]} 
         @presentation-state]
     (show-slide 
-      (:pres (get-slide-content curr-slide-index)) 
+      (get-slide-content curr-slide-index) 
       (str curr-slide-index "\\" (last-side-index))    
       curr-break-limit)))
 
@@ -88,14 +85,14 @@
                                        :curr-break-limit curr-break-limit)))
    (re)))
 
-(defn h [] (show-slide (:pres (get-slide-content 0)) "help" 1))
+(defn h [] (show-slide (get-slide-content 0) "help" 1))
 
 (defn f [] (g 1))
 
 (defn l [] (g (last-side-index)))
 
 (defn num-breaks [slide-index] 
- (:num-breaks (get-slide-content slide-index)))
+ (dec (count (get-slide-content slide-index))))
 
 (defn get-current-slide-idx-w-break-limit
   ([]

@@ -12,11 +12,6 @@
   (remove #(= [separator] %) 
           (partition-by #(not= separator %) coll)))
 
-(defn to-pres-and-full-code [pres]
-  {
-   :pres pres
-   :num-breaks (dec (count pres))})
-
 (defn slides [file-content]
       (->> file-content
            identify-separators
@@ -26,8 +21,7 @@
                   (map (fn [break]
                     (into (if (= :code (first break)) [nil] []) 
                       (map #(clojure.string/join "\n" %) (chunks :code break)))) 
-                    slide)))
-           (map to-pres-and-full-code)))
+                    slide)))))
 
 (defn parse-to-slides [content-file-name]
  (slides (slurp content-file-name)))

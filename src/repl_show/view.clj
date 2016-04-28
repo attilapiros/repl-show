@@ -109,7 +109,8 @@
   (reduce (fn [sum content] 
             (+ sum
                (if (and content (not (empty? content))) 
-                      (+ 2 (count (re-seq #"\n" content))) 0))) 
+                      (inc (count (clojure.string/split-lines content))) 
+                      0))) 
           0 
           (flatten texts-and-codes)))
 
