@@ -104,16 +104,6 @@
       (map #(format-line % view-width) 
            (conj  (clojure.string/split-lines text-block) "")))))
 
-
-(defn slide-height [texts-and-codes]
-  (reduce (fn [sum content] 
-            (+ sum
-               (if (and content (not (empty? content))) 
-                      (inc (count (clojure.string/split-lines content))) 
-                      0))) 
-          0 
-          (flatten texts-and-codes)))
-
 (defn format-build [build]
   (map-indexed (fn [idx content]
                  (if (even? idx) 
@@ -123,11 +113,11 @@
 
 (defn merge-texts-and-codes [texts-and-codes break-limit]
   (let [visible-builds (take break-limit texts-and-codes) 
-        slide-height (slide-height texts-and-codes)
         slide-as-list (flatten (map format-build visible-builds))
+        slide-height (count slide-as-list)
         {:keys [view-width view-height show-footage]} @view-config
         view-height (- view-height 3) ; 3 = repl promp and 2 borders
-        remaining-lines (trace/trace "remaining-lines" (- view-height slide-height))
+        remaining-lines (- view-height slide-height)
         n-lines-before (quot remaining-lines 2)
         n-lines-after (- 
                         (- view-height (count slide-as-list) n-lines-before)
