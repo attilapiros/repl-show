@@ -1,8 +1,8 @@
 (ns repl-show.core (:gen-class)
-  (:require [glow.core :as glow]
-            [repl-show.parser :refer [parse-to-slides]]
-            [repl-show.view :refer [show-slide view-config]]
-            [clojure.tools.trace :as trace]))
+    (:require [glow.core :as glow]
+              [repl-show.parser :refer [parse-to-slides]]
+              [repl-show.view :refer [show-slide view-config]]
+              [clojure.tools.trace :as trace]))
 
 (def help-content ["| \\r Repl-Show Help"
                    ""
@@ -23,7 +23,7 @@
                    "| - s is optional boolean (show-footage)"
                    ])
 
-(defn add-help-slide [loaded-slides]
+(defn- add-help-slide [loaded-slides]
   (into [[[(apply str (interpose "\n" help-content))]]] loaded-slides))
 
 (def presentation-state 
@@ -48,35 +48,40 @@
             (recur (read reader false :eof-during-code-reaading) res false)))
         res))))
 
-(defn run []
+(defn run
+  "Run the code in the current slide break."
+  []
   (let [{:keys [curr-slide-index curr-break-limit]} @presentation-state
         break (nth (get-in @presentation-state [:slides curr-slide-index]) (dec curr-break-limit))
         only-codes-in-break (keep-indexed (fn [idx v] (when (odd? idx) v)) break)
         code (clojure.string/join "\n" (flatten only-codes-in-break))  
         ]
-        (if (not (empty? code) ) 
-          (exec-code-expression-by-expression code)
-          (symbol "No code to execute!")
-          )))
+    (if (not (empty? code) ) 
+      (exec-code-expression-by-expression code)
+      (symbol "No code to execute!")
+      )))
 
 
-(defn get-slide-content [index]
+(defn- get-slide-content [index]
   (let  [{:keys [curr-break-limit slides]} @presentation-state]
     (if (< index 0) [["| \\r Index lower bound"]]
-      (get slides index [["| \\r Index upper bound"]]))))
+        (get slides index [["| \\r Index upper bound"]]))))
 
-(defn last-side-index []
+(defn- last-side-index []
   (dec (count (:slides @presentation-state))))
 
-(defn re []
+(defn re
+  "Redraw current slide."
+  []
   (let [{:keys [curr-slide-index slides curr-break-limit]} 
         @presentation-state]
     (show-slide 
-      (get-slide-content curr-slide-index) 
-      (str curr-slide-index "\\" (last-side-index))    
-      curr-break-limit)))
+     (get-slide-content curr-slide-index) 
+     (str curr-slide-index "\\" (last-side-index))    
+     curr-break-limit)))
 
-(defn g 
+(defn g
+  "Go to given slide (and break)."
   ([slide-index] (g slide-index 1))
   ([slide-index curr-break-limit] 
    (if (and (< 0 slide-index) (<= slide-index (last-side-index)))
@@ -85,23 +90,30 @@
                                        :curr-break-limit curr-break-limit)))
    (re)))
 
-(defn h [] (show-slide (get-slide-content 0) "help" 1))
+(defn h
+  "Show help."
+  [] (show-slide (get-slide-content 0) "help" 1))
 
-(defn f [] (g 1))
+(defn f
+  "Go to first slide."
+  [] (g 1))
 
-(defn l [] (g (last-side-index)))
+(defn l
+  "Go to last slide."
+  [] (g (last-side-index)))
 
-(defn num-breaks [slide-index] 
- (dec (count (get-slide-content slide-index))))
+(defn- num-breaks [slide-index] 
+  (dec (count (get-slide-content slide-index))))
 
-(defn get-current-slide-idx-w-break-limit
+(defn- get-current-slide-idx-w-break-limit
   ([]
    (let [{:keys [curr-slide-index _ curr-break-limit]} @presentation-state] 
      [curr-slide-index curr-break-limit])))
 
 
 (defn n
-  ([] 
+  "Next: forward with n breaks."
+  ([]   
    (n 1))
   ([num-steps-to-go] 
    (n num-steps-to-go (get-current-slide-idx-w-break-limit))) 
@@ -112,10 +124,11 @@
      (if (<= next-break (inc break-limit))
        (g slide-index next-break)
        (recur 
-         (- num-steps-to-go 1 (- break-limit curr-break-limit)) 
-         [(inc slide-index) 0])))))
+        (- num-steps-to-go 1 (- break-limit curr-break-limit)) 
+        [(inc slide-index) 0])))))
 
 (defn p
+  "Previous: backward with n breaks."
   ([] 
    (p 1))
   ([num-steps-to-go] 
@@ -129,23 +142,27 @@
               [(dec slide-index) prev-break-limit])))))
 
 (defn config-view
+  "Configures the view size and indicates whether the presentation footage 
+  with the number of slides and actual slide index is shown."
   ([width height] (config-view width height true)) 
   ([width height show-footage]
-    (println (reset! view-config {:view-width width 
-                         :view-height height 
-                         :show-footage show-footage}))
-    (re)))
+   (println (reset! view-config {:view-width width 
+                                 :view-height height 
+                                 :show-footage show-footage}))
+   (re)))
 
 (defn start 
+  "Start presentation by loading the given file as presentation content source. 
+  If content file name is not given then it starts with the tutorial."
   ([] (start content-file-name))
   ([content-file-name]
    (reset! 
-     presentation-state 
-     {
-      :curr-slide-index 0 
-      :curr-break-limit 1
-      :slides (-> content-file-name 
-                  parse-to-slides 
-                  add-help-slide)})
+    presentation-state 
+    {
+     :curr-slide-index 0 
+     :curr-break-limit 1
+     :slides (-> content-file-name 
+                 parse-to-slides 
+                 add-help-slide)})
    (n)))
 

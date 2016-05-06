@@ -1,6 +1,6 @@
 (ns repl-show.view (:gen-class)
-  (:require [glow.core :as glow]
-            [clojure.tools.trace :as trace]))
+    (:require [glow.core :as glow]
+              [clojure.tools.trace :as trace]))
 
 (def default-left-margin-size 4)
 
@@ -70,9 +70,9 @@
           #">(.*)"  :>> #(vector :right (second %)) 
           #"[|](.*)" :>> #(vector :center (second %)) 
           #"/" :>> (fn [_] ( vector :center (string-with-n-char 
-                                              (- view-width (* 2 default-left-margin-size)) \-))) 
+                                             (- view-width (* 2 default-left-margin-size)) \-))) 
           #"//" :>> (fn [_] ( vector :center (string-with-n-char 
-                                               (- view-width 2) \-))) 
+                                              (- view-width 2) \-))) 
           [:default text-with-marker])
         colored-text (length-and-colored text-body) 
         colored-length (text-length colored-text) 
@@ -116,16 +116,17 @@
         slide-as-list (flatten (map format-build visible-builds))
         slide-height (count slide-as-list)
         {:keys [view-width view-height show-footage]} @view-config
-        view-height (- view-height 3) ; 3 = repl promp and 2 borders
+        view-height (- view-height 3) ; it is 3 as 1 repl prompt and the 2 borders
         remaining-lines (- view-height slide-height)
         n-lines-before (quot remaining-lines 2)
         n-lines-after (- 
-                        (- view-height (count slide-as-list) n-lines-before)
-                        (if show-footage 1 0))
+                       (- view-height slide-height n-lines-before)
+                       (if show-footage 1 0))
         lines-before (repeat n-lines-before (full-line view-width ""))
         lines-after (repeat n-lines-after (full-line view-width ""))
         ]
     (clojure.string/join "\n" (into ( into ( into [] lines-before) slide-as-list) lines-after))))
+
 
 (defn get-horizontal-frame []
   (string-with-n-char (:view-width @view-config) \*))
