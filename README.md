@@ -27,7 +27,7 @@ lein repl
 
 - use the repl-show namespace:
 ```
- (use '[repl-show.core])
+ (use 'repl-show.core)
 ```
 
 - start the tutorial which is 15 easy slides about the markup and navigation: 
@@ -43,7 +43,7 @@ lein repl
 
 - use the repl-show namespace:
 ```
- (use '[repl-show.core])
+ (use 'repl-show.core)
 ```
 
 - start the presentation: 
